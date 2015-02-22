@@ -23,6 +23,10 @@ namespace KanrenTests
             Console.WriteLine("\r\nFives:");
             Print(fv(Kanren.EmptyState));
 
+            var fs = FivesAndSixes();
+            Console.WriteLine("\r\nFives & Sixes:");
+            Print(fs.Value(Kanren.EmptyState));
+
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
@@ -52,7 +56,17 @@ namespace KanrenTests
 
         static Kanren.Goal Fives(Kanren.Var<int> x)
         {
-            return x == 5 | Kanren.Recursive(Fives, x);
+            return x == 5 | Kanren.Recurse(Fives, x);
+        }
+
+        static Kanren.Goal Sixes(Kanren.Var<int> x)
+        {
+            return x == 6 | Kanren.Recurse(Sixes, x);
+        }
+
+        static Kanren.Goal FivesAndSixes()
+        {
+            return Kanren.Exists<int>(x => Fives(x) | Sixes(x));
         }
     }
 }

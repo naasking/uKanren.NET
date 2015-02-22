@@ -31,21 +31,21 @@ namespace uKanren
             var v = Walk(vorig, s) ?? vorig;
             var uvar = u as Var;
             var vvar = v as Var;
-            var equ = u as Pair;
-            var eqv = v as Pair;
+            //var equ = u as Pair;
+            //var eqv = v as Pair;
             return uvar != null && vvar != null && vvar.Equals(uvar) ? s:
                    uvar != null                                      ? s.Extend(uvar, v):
                    vvar != null                                      ? s.Extend(vvar, u):
-                   equ != null && eqv != null                        ? Unify(equ, eqv, s):
+                   //equ != null && eqv != null                        ? Unify(equ, eqv, s):
                    u.Equals(v)                                       ? Unify(u, v, s):
                                                                        null;
         }
 
-        static State Unify(Pair u, Pair v, State s)
-        {
-            s = Unify(u.left, v.left, s);
-            return s == null ? s : Unify(u.right, v.right, s);
-        }
+        //static State Unify(Pair u, Pair v, State s)
+        //{
+        //    s = Unify(u.left, v.left, s);
+        //    return s == null ? s : Unify(u.right, v.right, s);
+        //}
 
         public struct Goal
         {
@@ -68,7 +68,7 @@ namespace uKanren
         {
             public Vector<KeyValuePair<Var, Kanren>?> substitutions;
             public int next = 1;
-            public Goal Continuation;
+            public Goal? Continuation;
 
             public Kanren Get(Var x)
             {
@@ -138,13 +138,24 @@ namespace uKanren
         public static Goal Disjunction(Goal left, Goal right)
         {
             //return new Goal { Value = state => Interleave(left.Value(state), right.Value(state)) };
-            return new Goal { Value = state => left.Value(state).Concat(right.Value(state)) };
+            //return new Goal { Value = state => left.Value(state).Concat(right.Value(state)) };
             //return new Goal { Value = state => new[] { left.Value(state), right.Value(state) }.Transpose().SelectMany(x => x) };
+            return new Goal
+            {
+                Value = state =>
+                {
+                    var tmp = left.Value(state).Concat(right.Value(state));
+                    return state.Continuation == null ? tmp : tmp.Concat(state.Continuation.Value.Value(state)); //FIXME: should compute eagerly here?
+                }
+            };
         }
 
-        public static Goal Recursive<T>(Func<Var<T>, Goal> body, Var<T> x)
+        public static Goal Recurse<T>(Func<Var<T>, Goal> body, Var<T> x)
         {
-            return new Goal { Value = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } } };
+            return new Goal
+            {
+                Value = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
+            };
         }
 
         public static Goal Equal(Kanren left, Kanren right)
@@ -228,17 +239,17 @@ namespace uKanren
             }
         }
 
-        public sealed class Pair : Kanren
-        {
-            public Kanren left;
-            public Kanren right;
+        //public sealed class Pair : Kanren
+        //{
+        //    public Kanren left;
+        //    public Kanren right;
 
-            public override bool Equals(Kanren other)
-            {
-                var x = other as Pair;
-                return x != null && left.Equals(x.left) && right.Equals(x.right);
-            }
-        }
+        //    public override bool Equals(Kanren other)
+        //    {
+        //        var x = other as Pair;
+        //        return x != null && left.Equals(x.left) && right.Equals(x.right);
+        //    }
+        //}
         #endregion
     }
 }
