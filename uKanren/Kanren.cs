@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Sasa;
+using Sasa.Linq;
 using Sasa.Collections;
 
 namespace uKanren
@@ -46,7 +47,7 @@ namespace uKanren
             return s == null ? s : Unify(u.right, v.right, s);
         }
 
-        public sealed class Goal
+        public struct Goal
         {
             public Func<State, IEnumerable<State>> Value { get; set; }
 
@@ -67,6 +68,7 @@ namespace uKanren
         {
             public Vector<KeyValuePair<Var, Kanren>?> substitutions;
             public int next = 1;
+            public Goal Continuation;
 
             public Kanren Get(Var x)
             {
@@ -112,9 +114,37 @@ namespace uKanren
             return new Goal { Value = state => left.Value(state).SelectMany(x => right.Value(x)) };
         }
 
+        static IEnumerable<T> Interleave<T>(IEnumerable<T> first, IEnumerable<T> second)
+        {
+            if (first == null) throw new ArgumentNullException("first");
+            if (second == null) throw new ArgumentNullException("second");
+            using (var e1 = first.GetEnumerator())
+            {
+                using (var e2 = second.GetEnumerator())
+                {
+                    bool b1, b2;
+                    do
+                    {
+                        b1 = e1.MoveNext();
+                        b2 = e2.MoveNext();
+                        if (b1) yield return e1.Current;
+                        if (b2) yield return e2.Current;
+                    }
+                    while (b1 || b2);
+                }
+            }
+        }
+
         public static Goal Disjunction(Goal left, Goal right)
         {
+            //return new Goal { Value = state => Interleave(left.Value(state), right.Value(state)) };
             return new Goal { Value = state => left.Value(state).Concat(right.Value(state)) };
+            //return new Goal { Value = state => new[] { left.Value(state), right.Value(state) }.Transpose().SelectMany(x => x) };
+        }
+
+        public static Goal Recursive<T>(Func<Var<T>, Goal> body, Var<T> x)
+        {
+            return new Goal { Value = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } } };
         }
 
         public static Goal Equal(Kanren left, Kanren right)
@@ -124,8 +154,8 @@ namespace uKanren
                 Value = state =>
                 {
                     var s = Unify(left, right, state);
-                    //FIXME: not right
-                    return s != null ? new[] { new State { substitutions = s.substitutions, next = s.next } }:
+                    //FIXME: shouldn't this be just s? or new State { substitutions = s.substitutions, next = state.next }
+                    return s != null ? new[] { s }:
                                        Enumerable.Empty<State>();
                 }
             };

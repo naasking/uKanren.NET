@@ -12,13 +12,18 @@ namespace KanrenTests
         static void Main(string[] args)
         {
             var x = Simple().Value(Kanren.EmptyState);
-            Console.WriteLine("Simple:");
+            Console.WriteLine("\r\nSimple:");
             Print(x);
 
             var y = SimpleConj().Value(Kanren.EmptyState);
-            Console.WriteLine("SimpleConj:");
+            Console.WriteLine("\r\nSimpleConj:");
             Print(y);
 
+            var fv = Kanren.Exists<int>(Fives).Value;
+            Console.WriteLine("\r\nFives:");
+            Print(fv(Kanren.EmptyState));
+
+            Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
 
@@ -43,6 +48,11 @@ namespace KanrenTests
         {
             return Kanren.Exists<int>(x => x == 5)
                  & Kanren.Exists<int>(y => y == 5 | y == 6);
+        }
+
+        static Kanren.Goal Fives(Kanren.Var<int> x)
+        {
+            return x == 5 | Kanren.Recursive(Fives, x);
         }
     }
 }
