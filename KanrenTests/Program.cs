@@ -19,13 +19,17 @@ namespace KanrenTests
             Console.WriteLine("\r\nSimpleConj:");
             Print(y);
 
-            var fv = Kanren.Exists<int>(Fives).Search;
+            var fv = Kanren.Exists<int>(Fives);
             Console.WriteLine("\r\nFives:");
-            Print(fv(Kanren.EmptyState));
+            Print(fv.Search(Kanren.EmptyState));
 
             var fs = FivesAndSixes();
             Console.WriteLine("\r\nFives & Sixes:");
             Print(fs.Search(Kanren.EmptyState));
+
+            var fx = FivesXorSixes();
+            Console.WriteLine("\r\nFives ^ Sixes:");
+            Print(fx.Search(Kanren.EmptyState));
 
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
@@ -67,6 +71,11 @@ namespace KanrenTests
         static Kanren.Goal FivesAndSixes()
         {
             return Kanren.Exists<int>(x => Fives(x) | Sixes(x));
+        }
+
+        static Kanren.Goal FivesXorSixes()
+        {
+            return Kanren.Exists<int>(x => Fives(x) & Sixes(x));
         }
     }
 }

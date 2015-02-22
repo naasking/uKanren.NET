@@ -20,36 +20,34 @@ namespace uKanren
             {
                 v = uvar as Var;
                 if (v == null) break;
-                uvar = env.Get(v);
+                var tmp = env.Get(v);
+                if (tmp == null) return uvar;
+                uvar = tmp;
             }
             return uvar;
         }
 
         static State Unify(Kanren uorig, Kanren vorig, State s)
         {
-            var u = Walk(uorig, s) ?? uorig;
-            var v = Walk(vorig, s) ?? vorig;
+            var u = Walk(uorig, s);
+            var v = Walk(vorig, s);
             var uvar = u as Var;
             var vvar = v as Var;
-            //var equ = u as Pair;
-            //var eqv = v as Pair;
             return uvar != null && vvar != null && vvar.Equals(uvar) ? s:
                    uvar != null                                      ? s.Extend(uvar, v):
                    vvar != null                                      ? s.Extend(vvar, u):
-                   //equ != null && eqv != null                        ? Unify(equ, eqv, s):
                    u.Equals(v)                                       ? Unify(u, v, s):
                                                                        null;
         }
 
-        //static State Unify(Pair u, Pair v, State s)
-        //{
-        //    s = Unify(u.left, v.left, s);
-        //    return s == null ? s : Unify(u.right, v.right, s);
-        //}
-
         public struct Goal
         {
-            public Func<State, IEnumerable<State>> Search { get; set; }
+            internal Func<State, IEnumerable<State>> Thunk { get; set; }
+
+            public IEnumerable<State> Search(State state)
+            {
+                return Thunk == null ? Enumerable.Empty<State>() : Thunk(state);
+            }
 
             public static Goal operator |(Goal left, Goal right)
             {
@@ -101,60 +99,29 @@ namespace uKanren
         {
             return new Goal
             {
-                Search = state =>
+                Thunk = state =>
                 {
-                    var fn = body(new Var<T> { id = state.next, Name = body.Method.GetParameters()[0].Name }).Search;
-                    return fn(state.Next());
+                    var fn = body(new Var<T> { id = state.next, Name = body.Method.GetParameters()[0].Name });
+                    return fn.Search(state.Next());
                 }
             };
         }
 
         public static Goal Conjunction(Goal left, Goal right)
         {
-            return new Goal { Search = state => left.Search(state).SelectMany(x => right.Search(x)) };
-        }
-
-        static IEnumerable<T> Interleave<T>(IEnumerable<T> first, IEnumerable<T> second)
-        {
-            if (first == null) throw new ArgumentNullException("first");
-            if (second == null) throw new ArgumentNullException("second");
-            using (var e1 = first.GetEnumerator())
-            {
-                using (var e2 = second.GetEnumerator())
-                {
-                    bool b1, b2;
-                    do
-                    {
-                        b1 = e1.MoveNext();
-                        b2 = e2.MoveNext();
-                        if (b1) yield return e1.Current;
-                        if (b2) yield return e2.Current;
-                    }
-                    while (b1 || b2);
-                }
-            }
+            return new Goal { Thunk = state => left.Search(state).SelectMany(x => right.Search(x)) };
         }
 
         public static Goal Disjunction(Goal left, Goal right)
         {
-            //return new Goal { Value = state => Interleave(left.Value(state), right.Value(state)) };
-            //return new Goal { Value = state => left.Value(state).Concat(right.Value(state)) };
-            //return new Goal { Value = state => new[] { left.Value(state), right.Value(state) }.Transpose().SelectMany(x => x) };
-            return new Goal
-            {
-                Search = state =>
-                {
-                    var tmp = left.Search(state).Concat(right.Search(state));
-                    return state.Continuation == null ? tmp : tmp.Concat(state.Continuation.Value.Search(state)); //FIXME: should compute eagerly here?
-                }
-            };
+            return new Goal { Thunk = state => left.Search(state).Concat(right.Search(state)) };
         }
 
         public static Goal Recurse<T>(Func<Var<T>, Goal> body, Var<T> x)
         {
             return new Goal
             {
-                Search = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
+                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
             };
         }
 
@@ -162,12 +129,11 @@ namespace uKanren
         {
             return new Goal
             {
-                Search = state =>
+                Thunk = state =>
                 {
                     var s = Unify(left, right, state);
                     //FIXME: shouldn't this be just s? or new State { substitutions = s.substitutions, next = state.next }
-                    return s != null ? new[] { s }:
-                                       Enumerable.Empty<State>();
+                    return s != null ? new[] { s } : Enumerable.Empty<State>();
                 }
             };
         }
@@ -238,18 +204,6 @@ namespace uKanren
                 return value.ToString();
             }
         }
-
-        //public sealed class Pair : Kanren
-        //{
-        //    public Kanren left;
-        //    public Kanren right;
-
-        //    public override bool Equals(Kanren other)
-        //    {
-        //        var x = other as Pair;
-        //        return x != null && left.Equals(x.left) && right.Equals(x.right);
-        //    }
-        //}
         #endregion
     }
 }
