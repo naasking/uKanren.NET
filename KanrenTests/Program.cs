@@ -11,21 +11,21 @@ namespace KanrenTests
     {
         static void Main(string[] args)
         {
-            var x = Simple().Value(Kanren.EmptyState);
+            var x = Simple().Search(Kanren.EmptyState);
             Console.WriteLine("\r\nSimple:");
             Print(x);
 
-            var y = SimpleConj().Value(Kanren.EmptyState);
+            var y = SimpleConj().Search(Kanren.EmptyState);
             Console.WriteLine("\r\nSimpleConj:");
             Print(y);
 
-            var fv = Kanren.Exists<int>(Fives).Value;
+            var fv = Kanren.Exists<int>(Fives).Search;
             Console.WriteLine("\r\nFives:");
             Print(fv(Kanren.EmptyState));
 
             var fs = FivesAndSixes();
             Console.WriteLine("\r\nFives & Sixes:");
-            Print(fs.Value(Kanren.EmptyState));
+            Print(fs.Search(Kanren.EmptyState));
 
             Console.WriteLine("Please press enter...");
             Console.ReadLine();

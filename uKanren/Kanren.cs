@@ -49,7 +49,7 @@ namespace uKanren
 
         public struct Goal
         {
-            public Func<State, IEnumerable<State>> Value { get; set; }
+            public Func<State, IEnumerable<State>> Search { get; set; }
 
             public static Goal operator |(Goal left, Goal right)
             {
@@ -101,9 +101,9 @@ namespace uKanren
         {
             return new Goal
             {
-                Value = state =>
+                Search = state =>
                 {
-                    var fn = body(new Var<T> { id = state.next, Name = body.Method.GetParameters()[0].Name }).Value;
+                    var fn = body(new Var<T> { id = state.next, Name = body.Method.GetParameters()[0].Name }).Search;
                     return fn(state.Next());
                 }
             };
@@ -111,7 +111,7 @@ namespace uKanren
 
         public static Goal Conjunction(Goal left, Goal right)
         {
-            return new Goal { Value = state => left.Value(state).SelectMany(x => right.Value(x)) };
+            return new Goal { Search = state => left.Search(state).SelectMany(x => right.Search(x)) };
         }
 
         static IEnumerable<T> Interleave<T>(IEnumerable<T> first, IEnumerable<T> second)
@@ -142,10 +142,10 @@ namespace uKanren
             //return new Goal { Value = state => new[] { left.Value(state), right.Value(state) }.Transpose().SelectMany(x => x) };
             return new Goal
             {
-                Value = state =>
+                Search = state =>
                 {
-                    var tmp = left.Value(state).Concat(right.Value(state));
-                    return state.Continuation == null ? tmp : tmp.Concat(state.Continuation.Value.Value(state)); //FIXME: should compute eagerly here?
+                    var tmp = left.Search(state).Concat(right.Search(state));
+                    return state.Continuation == null ? tmp : tmp.Concat(state.Continuation.Value.Search(state)); //FIXME: should compute eagerly here?
                 }
             };
         }
@@ -154,7 +154,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Value = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
+                Search = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
             };
         }
 
@@ -162,7 +162,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Value = state =>
+                Search = state =>
                 {
                     var s = Unify(left, right, state);
                     //FIXME: shouldn't this be just s? or new State { substitutions = s.substitutions, next = state.next }
