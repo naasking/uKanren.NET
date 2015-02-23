@@ -21,7 +21,7 @@ namespace uKanren
                 v = uvar as Var;
                 if (v == null) break;
                 var tmp = env.Get(v);
-                if (tmp == null) return uvar;
+                if (tmp == null) break;
                 uvar = tmp;
             }
             return uvar;
@@ -64,34 +64,30 @@ namespace uKanren
 
         public sealed class State
         {
-            public Vector<KeyValuePair<Var, Kanren>?> substitutions;
-            public int next = 1;
-            public Goal? Continuation;
+            internal Trie<Var, Kanren> substitutions;
+            internal int next = 1;
+            internal Goal? immature;
 
             public Kanren Get(Var x)
             {
-                var z = substitutions[x.id];
-                return z != null ? z.Value.Value : null;
+                Kanren v;
+                return substitutions.TryGetValue(x, out v) ? v : null;
             }
 
             public State Extend(Var x, Kanren v)
             {
-                return new State { substitutions = substitutions.Set(x.id, Tuples.Keyed(x, v)), next = next };
+                return new State { substitutions = substitutions.Update(x, v), next = next };
             }
 
             public IEnumerable<KeyValuePair<Var, Kanren>> GetValues()
             {
-                for (var i = 0; i < substitutions.Count; ++i)
-                {
-                    var x = substitutions[i];
-                    if (x != null) yield return x.Value;
-                }
+                return substitutions;
             }
 
             public State Next()
             {
                 // ensure substitutions is as large as is needed to accomodate all possible variables
-                return new State { substitutions = substitutions.Add(null), next = next + 1 };
+                return new State { substitutions = substitutions, next = next + 1 };
             }
         }
 
@@ -121,7 +117,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, Continuation = body(x) } }
+                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = body(x) } }
             };
         }
 
@@ -138,27 +134,21 @@ namespace uKanren
             };
         }
 
-        public static Goal Simple()
-        {
-            return Exists<int>(x => x == 5);
-        }
-
-        public static Goal SimpleConj()
-        {
-            return Exists<int>(x => x == 5)
-                 & Exists<int>(y => y == 5 | y == 6);
-        }
-
         #region Kanren terms
         public abstract class Var : Kanren
         {
             internal int id;
             public string Name { get; internal set; }
+            public override int GetHashCode()
+            {
+                return id;
+            }
             public override string ToString()
             {
                 return Name + "[" + id + "]";
             }
         }
+
         public sealed class Var<T> : Var
         {
             public override bool Equals(Kanren other)
