@@ -189,6 +189,12 @@ namespace uKanren
                 var x = other as Val<T>;
                 return x != null && EqualityComparer<T>.Default.Equals(value, x.value);
             }
+
+            public override int GetHashCode()
+            {
+                return value.GetHashCode();
+            }
+
             public override string ToString()
             {
                 return value.ToString();
