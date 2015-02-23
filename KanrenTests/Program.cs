@@ -65,7 +65,7 @@ namespace KanrenTests
 
         static Kanren.Goal Sixes(Kanren.Var<int> x)
         {
-            return x == 6 | Kanren.Recurse(Sixes, x);
+            return 6 == x | Kanren.Recurse(Sixes, x);
         }
 
         static Kanren.Goal FivesAndSixes()
