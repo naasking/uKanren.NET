@@ -8,36 +8,57 @@ using Sasa.Collections;
 
 namespace uKanren
 {
-    public abstract class Kanren
+    public sealed class Kanren
     {
-        public abstract bool Equals(Kanren other);
+        internal int id;
+        public string Name { get; internal set; }
 
-        static Kanren Walk(Kanren uvar, State env)
+        public override int GetHashCode()
         {
-            // search for final Var binding in env
-            Var v;
-            while (uvar != null)
+            return id;
+        }
+
+        public override bool Equals(object other)
+        {
+            Kanren x = other as Kanren;
+            return !ReferenceEquals(x, null) && id == x.id;
+        }
+
+        public override string ToString()
+        {
+            return Name + "[" + id + "]";
+        }
+
+        static object Walk(object uvar, State env)
+        {
+            // search for final Kanren binding in env
+            Kanren v;
+            while (true)
             {
-                v = uvar as Var;
-                if (v == null) break;
+                v = uvar as Kanren;
+                if (ReferenceEquals(v, null)) break;
                 var tmp = env.Get(v);
-                if (tmp == null) break;
+                if (ReferenceEquals(tmp, null)) break;
                 uvar = tmp;
             }
             return uvar;
         }
 
-        static State Unify(Kanren uorig, Kanren vorig, State s)
+        static State Unify(object uorig, object vorig, State s)
         {
             var u = Walk(uorig, s);
             var v = Walk(vorig, s);
-            var uvar = u as Var;
-            var vvar = v as Var;
-            return uvar != null && vvar != null && vvar.Equals(uvar) ? s:
-                   uvar != null                                      ? s.Extend(uvar, v):
-                   vvar != null                                      ? s.Extend(vvar, u):
-                   u.Equals(v)                                       ? Unify(u, v, s):
-                                                                       null;
+            var uvar = u as Kanren;
+            var vvar = v as Kanren;
+            if (!ReferenceEquals(uvar, null) && !ReferenceEquals(vvar, null) && uvar.Equals(vvar))
+                return s;
+            if (!ReferenceEquals(uvar, null))
+                return s.Extend(uvar, v);
+            if (!ReferenceEquals(vvar, null))
+                return s.Extend(vvar, u);
+            if (u.Equals(v))
+                return Unify(u, v, s);
+            return null;
         }
 
         public struct Goal
@@ -64,40 +85,41 @@ namespace uKanren
 
         public sealed class State
         {
-            internal Trie<Var, Kanren> substitutions;
-            internal int next = 1;
+            internal Trie<Kanren, object> substitutions;
+            internal int next = 0;
             internal Goal? immature;
 
-            public Kanren Get(Var x)
+            public object Get(Kanren x)
             {
-                Kanren v;
+                object v;
                 return substitutions.TryGetValue(x, out v) ? v : null;
             }
 
-            public State Extend(Var x, Kanren v)
+            public State Extend(Kanren x, object v)
             {
-                return new State { substitutions = substitutions.Update(x, v), next = next };
+                //FIXME: shouldn't duplicate a binding, but if it would, should return null?
+                return new State { substitutions = substitutions.Add(x, v), next = next };
             }
 
-            public IEnumerable<KeyValuePair<Var, Kanren>> GetValues()
+            public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
             {
+                //return immature == null ? substitutions : substitutions.Concat(immature.Value.Search(this).SelectMany(x => x.GetValues()));
                 return substitutions;
             }
 
             public State Next()
             {
-                // ensure substitutions is as large as is needed to accomodate all possible variables
                 return new State { substitutions = substitutions, next = next + 1 };
             }
         }
 
-        public static Goal Exists<T>(Func<Var<T>, Goal> body)
+        public static Goal Exists(Func<Kanren, Goal> body)
         {
             return new Goal
             {
                 Thunk = state =>
                 {
-                    var fn = body(new Var<T> { id = state.next, Name = body.Method.GetParameters()[0].Name });
+                    var fn = body(new Kanren { id = state.next, Name = body.Method.GetParameters()[0].Name });
                     return fn.Search(state.Next());
                 }
             };
@@ -113,7 +135,7 @@ namespace uKanren
             return new Goal { Thunk = state => left.Search(state).Concat(right.Search(state)) };
         }
 
-        public static Goal Recurse<T>(Func<Var<T>, Goal> body, Var<T> x)
+        public static Goal Recurse(Func<Kanren, Goal> body, Kanren x)
         {
             return new Goal
             {
@@ -121,7 +143,7 @@ namespace uKanren
             };
         }
 
-        public static Goal Equal(Kanren left, Kanren right)
+        public new static Goal Equals(object left, object right)
         {
             return new Goal
             {
@@ -134,66 +156,33 @@ namespace uKanren
             };
         }
 
-        #region Kanren terms
-        public abstract class Var : Kanren
+        public static Goal operator ==(object left, Kanren right)
         {
-            internal int id;
-            public string Name { get; internal set; }
-            public override int GetHashCode()
-            {
-                return id;
-            }
-            public override string ToString()
-            {
-                return Name + "[" + id + "]";
-            }
+            return Equals(left, right);
         }
 
-        public sealed class Var<T> : Var
+        public static Goal operator ==(Kanren left, object right)
         {
-            public override bool Equals(Kanren other)
-            {
-                var x = other as Var<T>;
-                return x != null && id == x.id;
-            }
-
-            public static Goal operator ==(Var<T> left, T right)
-            {
-                return Equal(left, new Val<T> { value = right });
-            }
-
-            public static Goal operator ==(T left, Var<T> right)
-            {
-                return Equal(new Val<T> { value = left }, right);
-            }
-
-            #region Inequalities
-            public static Goal operator !=(Var<T> left, T right)
-            {
-                throw new NotSupportedException();
-            }
-
-            public static Goal operator !=(T left, Var<T> right)
-            {
-                throw new NotSupportedException();
-            }
-            #endregion
+            return Equals(left, right);
         }
 
-        public sealed class Val<T> : Kanren
+        public static Goal operator ==(Kanren left, Kanren right)
         {
-            public T value;
+            return Equals(left, right);
+        }
 
-            public override bool Equals(Kanren other)
-            {
-                var x = other as Val<T>;
-                return x != null && EqualityComparer<T>.Default.Equals(value, x.value);
-            }
-
-            public override string ToString()
-            {
-                return value.ToString();
-            }
+        #region Inequalities
+        public static Goal operator !=(object left, Kanren right)
+        {
+            throw new NotSupportedException();
+        }
+        public static Goal operator !=(Kanren left, object right)
+        {
+            throw new NotSupportedException();
+        }
+        public static Goal operator !=(Kanren left, Kanren right)
+        {
+            throw new NotSupportedException();
         }
         #endregion
     }
