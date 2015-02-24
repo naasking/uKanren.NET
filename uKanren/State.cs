@@ -31,8 +31,16 @@ namespace uKanren
         {
             //return immature == null ? substitutions : Enumerable.Empty<KeyValuePair<Kanren, object>>();
             //return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.Values));
-            return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.GetValues()));
+            // if immature != null, then this state is not yet fully resolved
+            return GetBounded(1);
             //return substitutions;
+        }
+
+        IEnumerable<KeyValuePair<Kanren, object>> GetBounded(int current)
+        {
+            return immature == null ? substitutions:
+                   current < 1000  ? immature().SelectMany(x => x.GetBounded(current + 1)):
+                                      Enumerable.Empty<KeyValuePair<Kanren, object>>();
         }
 
         /// <summary>
