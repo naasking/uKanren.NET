@@ -13,7 +13,7 @@ namespace uKanren
     {
         internal Trie<Kanren, object> substitutions;
         internal int next = 0;
-        internal Func<IEnumerable<State>> immature;
+        internal Func<Goal> immature;
 
         /// <summary>
         /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
@@ -30,7 +30,7 @@ namespace uKanren
         /// <exception cref="InvalidOperationException">Thrown when the state is incomplete.</exception>
         public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
         {
-            if (!IsComplete) throw new InvalidOperationException("State is not complete.");
+            //if (!IsComplete) throw new InvalidOperationException("State is not complete.");
             return substitutions;
         }
 
@@ -42,7 +42,7 @@ namespace uKanren
         public IEnumerable<State> Continue()
         {
             if (IsComplete) throw new InvalidOperationException("State is complete.");
-            return immature();
+            return immature().Thunk(this);
         }
 
         /// <summary>

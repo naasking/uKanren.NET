@@ -67,16 +67,7 @@ namespace uKanren
             // propagate the current state to the nested/immature stream, don't need to save substitutions or next variables
             return new Goal
             {
-                Thunk = state => new[] { new State { immature = () => body(x).Thunk(state) } }
-            };
-        }
-
-        public static Goal Recurse(Func<Goal> body)
-        {
-            // propagate the current state to the nested/immature stream, don't need to save substitutions or next variables
-            return new Goal
-            {
-                Thunk = state => new[] { new State { immature = () => body().Thunk(state) } }
+                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = () => body(x) } }
             };
         }
 
@@ -140,7 +131,7 @@ namespace uKanren
             if (!ReferenceEquals(vvar, null))
                 return s.Extend(vvar, u);
             if (u.Equals(v))
-                return Unify(u, v, s);
+                return s;
             return null;
         }
         #endregion

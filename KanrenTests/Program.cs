@@ -43,15 +43,24 @@ namespace KanrenTests
             Console.ReadLine();
         }
 
-        static void Print(IEnumerable<State> results)
+        static void Print(IEnumerable<State> results, int depth = 0)
         {
+            //var tmp = results.ElementAt(0).GetValues().Take(10).ToList();
             foreach (var x in results)
             {
-                foreach (var y in x.GetValues().Take(10))
+                if (x.IsComplete)
                 {
-                    Console.Write("{0} = {1}, ", y.Key, y.Value);
+                    foreach (var y in x.GetValues().Take(7))
+                    {
+                        Console.Write("{0} = {1}, ", y.Key, y.Value);
+                    }
+                    Console.WriteLine();
                 }
-                Console.WriteLine();
+                else
+                {
+                    if (!x.IsComplete && depth < 2)
+                        Print(x.Continue(), depth + 1);
+                }
             }
         }
 
