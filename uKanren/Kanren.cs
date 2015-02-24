@@ -65,7 +65,6 @@ namespace uKanren
 
         public static Goal Recurse(Func<Kanren, Goal> body, Kanren x)
         {
-            // propagate the current state to the nested/immature stream, don't need to save substitutions or next variables
             return new Goal
             {
                 Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = () => body(x) } }
