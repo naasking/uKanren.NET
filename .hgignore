@@ -5,3 +5,4 @@ packages/*
 uKanren/Copy (2) of Kanren.cs
 obj/*
 KanrenTests/packages.config
+*.suo
