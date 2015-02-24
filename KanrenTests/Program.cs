@@ -27,6 +27,10 @@ namespace KanrenTests
             Console.WriteLine("\r\nFives:");
             Print(fv.Search(Kanren.EmptyState));
 
+            var oan = Kanren.Exists(OneAndNine);
+            Console.WriteLine("\r\nOne and Nine:");
+            Print(oan.Search(Kanren.EmptyState));
+
             var fs = FivesAndSixes();
             Console.WriteLine("\r\nFives and Sixes:");
             Print(fs.Search(Kanren.EmptyState));
@@ -67,6 +71,11 @@ namespace KanrenTests
                  & Kanren.Exists(y => y == 5 | y == 6);
         }
 
+        static Goal OneAndNine(Kanren x)
+        {
+            return x == 1 & x == 9;
+        }
+
         static Goal Fives(Kanren x)
         {
             return x == 5 | Kanren.Recurse(Fives, x);
@@ -85,7 +94,6 @@ namespace KanrenTests
         static Goal FivesXorSixes()
         {
             return Kanren.Exists(z => Fives(z) & Sixes(z));
-            //return Kanren.Exists(x => x == 5 & x == 6);
         }
     }
 }

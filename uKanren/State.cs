@@ -13,7 +13,7 @@ namespace uKanren
     {
         internal Trie<Kanren, object> substitutions;
         internal int next = 0;
-        internal Goal? immature;
+        internal Func<IEnumerable<State>> immature;
 
         /// <summary>
         /// Extend the set of bindings.
@@ -29,8 +29,9 @@ namespace uKanren
 
         public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
         {
-            //return immature == null ? substitutions : substitutions.Concat(immature.Value.Search(this).SelectMany(x => x.GetValues()));
-            return substitutions;
+            return immature == null ? substitutions : Enumerable.Empty<KeyValuePair<Kanren, object>>();
+            //return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.GetValues()));
+            //return substitutions;
         }
 
         /// <summary>

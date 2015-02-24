@@ -65,7 +65,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = body(x) } }
+                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = () => body(x).Thunk(state) } }
             };
         }
 
