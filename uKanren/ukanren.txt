@@ -1,13 +1,0 @@
-﻿
-
-(define (unify u v s)
-	(let u = (walk u s)
-	 and v = (walk v s)
-		(cond
-			(var? u) && (var? v) (var=? u v) -> s
-			(var? u)						 -> (ext - s u v s)
-			(var? v)						 -> (ext - s v u s)
-			(pair? u) && (pair? v) ->
-				let s = (unify (car u) (car v) s) in
-					(s && (unify (cdr u) (cdr v) s))
-			(else (eqv? u v)				 -> s)		)	))
