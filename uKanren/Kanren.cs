@@ -58,6 +58,7 @@ namespace uKanren
 
         public static Goal Disjunction(Goal left, Goal right)
         {
+            // concat works here, but is less fair than interleaving evaluation between left and right
             //return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
             return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
         }
