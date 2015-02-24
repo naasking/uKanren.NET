@@ -47,7 +47,7 @@ namespace KanrenTests
         {
             foreach (var x in results)
             {
-                foreach (var y in x.GetValues())
+                foreach (var y in x.GetValues().Take(10))
                 {
                     Console.Write("{0} = {1}, ", y.Key, y.Value);
                 }
