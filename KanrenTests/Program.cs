@@ -28,18 +28,18 @@ namespace KanrenTests
             Print(fv.Search(Kanren.EmptyState));
 
             var fs = FivesAndSixes();
-            Console.WriteLine("\r\nFives & Sixes:");
+            Console.WriteLine("\r\nFives and Sixes:");
             Print(fs.Search(Kanren.EmptyState));
 
             var fx = FivesXorSixes();
-            Console.WriteLine("\r\nFives ^ Sixes:");
+            Console.WriteLine("\r\nFives xor Sixes:");
             Print(fx.Search(Kanren.EmptyState));
 
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
 
-        static void Print(IEnumerable<Kanren.State> results)
+        static void Print(IEnumerable<State> results)
         {
             foreach (var x in results)
             {
@@ -51,38 +51,38 @@ namespace KanrenTests
             }
         }
 
-        public static Kanren.Goal Simple()
+        public static Goal Simple()
         {
             return Kanren.Exists(x => x == 5 | x == 6);
         }
 
-        public static Kanren.Goal Simple2()
+        public static Goal Simple2()
         {
             return Kanren.Exists(x => x == 5 & Kanren.Exists(y => x == y));
         }
 
-        public static Kanren.Goal SimpleConj()
+        public static Goal SimpleConj()
         {
             return Kanren.Exists(x => x == 5)
                  & Kanren.Exists(y => y == 5 | y == 6);
         }
 
-        static Kanren.Goal Fives(Kanren x)
+        static Goal Fives(Kanren x)
         {
             return x == 5 | Kanren.Recurse(Fives, x);
         }
 
-        static Kanren.Goal Sixes(Kanren x)
+        static Goal Sixes(Kanren x)
         {
             return 6 == x | Kanren.Recurse(Sixes, x);
         }
 
-        static Kanren.Goal FivesAndSixes()
+        static Goal FivesAndSixes()
         {
             return Kanren.Exists(x => Fives(x) | Sixes(x));
         }
 
-        static Kanren.Goal FivesXorSixes()
+        static Goal FivesXorSixes()
         {
             return Kanren.Exists(z => Fives(z) & Sixes(z));
             //return Kanren.Exists(x => x == 5 & x == 6);
