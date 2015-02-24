@@ -1,5 +1,9 @@
 # uKanren.NET
-A native implementation of the MicroKanren DSL for .NET.
+
+A native implementation of the MicroKanren logic programming DSL for .NET. The paper describing the
+original Scheme implementation is here:
+
+http://webyrd.net/scheme-2013/papers/HemannMuKanren2013.pdf
 
 # Examples
 
