@@ -13,14 +13,14 @@ namespace uKanren
     {
         internal Trie<Kanren, object> substitutions;
         internal int next = 0;
-        internal Func<Goal> immature;
+        internal Func<Goal> incomplete;
 
         /// <summary>
         /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
         /// </summary>
         public bool IsComplete
         {
-            get { return immature == null; }
+            get { return incomplete == null; }
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace uKanren
         public IEnumerable<State> Continue()
         {
             if (IsComplete) throw new InvalidOperationException("State is complete.");
-            return immature().Thunk(this);
+            return incomplete().Thunk(this);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace uKanren
         internal State Extend(Kanren x, object v)
         {
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
-            return new State { substitutions = substitutions.Add(x, v), next = next, immature = immature };
+            return new State { substitutions = substitutions.Add(x, v), next = next, incomplete = incomplete };
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace uKanren
         /// <returns></returns>
         internal State Next()
         {
-            return new State { substitutions = substitutions, next = next + 1, immature = immature };
+            return new State { substitutions = substitutions, next = next + 1, incomplete = incomplete };
         }
     }
 }
