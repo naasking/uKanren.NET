@@ -58,11 +58,13 @@ namespace uKanren
 
         public static Goal Disjunction(Goal left, Goal right)
         {
-            return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
+            //return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
+            return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
         }
 
         public static Goal Recurse(Func<Kanren, Goal> body, Kanren x)
         {
+            // propagate the current state to the nested/immature stream
             return new Goal
             {
                 Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, immature = () => body(x).Thunk(state) } }
@@ -80,6 +82,24 @@ namespace uKanren
                     return s != null ? new[] { s } : Enumerable.Empty<State>();
                 }
             };
+        }
+
+        static IEnumerable<State> Interleave(IEnumerable<State> left, IEnumerable<State> right)
+        {
+            using (var eleft = left.GetEnumerator())
+            {
+                using (var eright = right.GetEnumerator())
+                {
+                    bool bleft, bright;
+                    do
+                    {
+                        bleft = eleft.MoveNext();
+                        bright = eright.MoveNext();
+                        if (bleft) yield return eleft.Current;
+                        if (bright) yield return eright.Current;
+                    } while(bleft || bright);
+                }
+            }
         }
         #endregion
 
