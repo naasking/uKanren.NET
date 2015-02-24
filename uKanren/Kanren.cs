@@ -41,7 +41,7 @@ namespace uKanren
         #region Core uKanren operators
         public static Goal Exists(Func<Kanren, Goal> body)
         {
-        var arg = body.Method.GetParameters()[0].Name;
+            var arg = body.Method.GetParameters()[0].Name;
             return new Goal
             {
                 Thunk = state =>
