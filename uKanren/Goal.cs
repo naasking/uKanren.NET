@@ -12,6 +12,11 @@ namespace uKanren
     {
         internal Func<State, IEnumerable<State>> Thunk { get; set; }
 
+        /// <summary>
+        /// Run the search given a state.
+        /// </summary>
+        /// <param name="state">The starting state.</param>
+        /// <returns>The set of states that satisfy the goals.</returns>
         public IEnumerable<State> Search(State state)
         {
             return Thunk == null ? Enumerable.Empty<State>() : Thunk(state);

@@ -72,9 +72,9 @@ namespace uKanren
         /// Generate a new state with an updated variable index.
         /// </summary>
         /// <returns></returns>
-        internal State Next()
+        internal State Next(int i)
         {
-            return new State { substitutions = substitutions, next = next + 1, incomplete = incomplete };
+            return new State { substitutions = substitutions, next = next + i, incomplete = incomplete };
         }
     }
 }

@@ -39,6 +39,11 @@ namespace uKanren
         public static State EmptyState = new State();
 
         #region Core uKanren operators
+        /// <summary>
+        /// Declare an goal with a new logic variable.
+        /// </summary>
+        /// <param name="body">The function describing the goal given the new Kanren variable.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Exists(Func<Kanren, Goal> body)
         {
             var arg = body.Method.GetParameters()[0].Name;
@@ -47,16 +52,47 @@ namespace uKanren
                 Thunk = state =>
                 {
                     var fn = body(new Kanren { id = state.next, Name = arg });
-                    return fn.Thunk(state.Next());
+                    return fn.Thunk(state.Next(1));
                 }
             };
         }
 
+        /// <summary>
+        /// Declare an goal with two new logic variables.
+        /// </summary>
+        /// <param name="body">The function describing the goal given the new Kanren variable.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
+        public static Goal Exists(Func<Kanren, Kanren, Goal> body)
+        {
+            var arg0 = body.Method.GetParameters()[0].Name;
+            var arg1 = body.Method.GetParameters()[1].Name;
+            return new Goal
+            {
+                Thunk = state =>
+                {
+                    var fn = body(new Kanren { id = state.next, Name = arg0 }, new Kanren { id = state.next + 1, Name = arg1 });
+                    return fn.Thunk(state.Next(2));
+                }
+            };
+        }
+
+        /// <summary>
+        /// Satisfy both two goals simultaneously.
+        /// </summary>
+        /// <param name="left">The left goal to satisfy.</param>
+        /// <param name="right">The right goal to satisfy.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Conjunction(Goal left, Goal right)
         {
             return new Goal { Thunk = state => left.Thunk(state).SelectMany(x => right.Thunk(x)) };
         }
 
+        /// <summary>
+        /// Satisfy either of the two goals.
+        /// </summary>
+        /// <param name="left">The left goal to satisfy.</param>
+        /// <param name="right">The right goal to satisfy.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Disjunction(Goal left, Goal right)
         {
             // concat works here, but is less fair than interleaving evaluation between left and right
@@ -64,6 +100,12 @@ namespace uKanren
             return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
         }
 
+        /// <summary>
+        /// Satisfy both two goals simultaneously.
+        /// </summary>
+        /// <param name="left">The left goal to satisfy.</param>
+        /// <param name="right">The right goal to satisfy.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Recurse(Func<Kanren, Goal> body, Kanren x)
         {
             return new Goal
@@ -72,6 +114,12 @@ namespace uKanren
             };
         }
 
+        /// <summary>
+        /// Ensure the left value equals the right value.
+        /// </summary>
+        /// <param name="left">The left value to unify.</param>
+        /// <param name="right">The right value to unify.</param>
+        /// <returns>A <see cref="Goal"/> that unifies <paramref name="left"/> and <paramref name="right"/> values.</returns>
         public new static Goal Equals(object left, object right)
         {
             return new Goal
