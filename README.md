@@ -23,7 +23,7 @@ Variable x may equal 5, and y may equal 5 or 6:
     public static Goal SimpleConjunction()
     {
         return Kanren.Exists(x => x == 5)
-                & Kanren.Exists(y => y == 5 | y == 6);
+             & Kanren.Exists(y => y == 5 | y == 6);
     }
 	...
     var y = SimpleConjunction().Search(Kanren.EmptyState);
