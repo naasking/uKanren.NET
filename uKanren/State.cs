@@ -24,13 +24,14 @@ namespace uKanren
         internal State Extend(Kanren x, object v)
         {
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
-            return new State { substitutions = substitutions.Add(x, v), next = next };
+            return new State { substitutions = substitutions.Add(x, v), next = next, immature = immature };
         }
 
         public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
         {
-            return immature == null ? substitutions : Enumerable.Empty<KeyValuePair<Kanren, object>>();
-            //return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.GetValues()));
+            //return immature == null ? substitutions : Enumerable.Empty<KeyValuePair<Kanren, object>>();
+            //return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.Values));
+            return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.GetValues()));
             //return substitutions;
         }
 
@@ -51,7 +52,7 @@ namespace uKanren
         /// <returns></returns>
         internal State Next()
         {
-            return new State { substitutions = substitutions, next = next + 1 };
+            return new State { substitutions = substitutions, next = next + 1, immature = immature };
         }
     }
 }
