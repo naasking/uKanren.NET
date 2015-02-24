@@ -26,5 +26,11 @@ namespace uKanren
         {
             return Kanren.Conjunction(left, right);
         }
+
+        public override string ToString()
+        {
+            var x = Thunk.Method.Name.Split('<', '>');
+            return x.Length >= 3 ? x[1] : Thunk.Method.Name;
+        }
     }
 }

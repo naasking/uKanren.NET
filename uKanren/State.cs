@@ -16,6 +16,36 @@ namespace uKanren
         internal Func<IEnumerable<State>> immature;
 
         /// <summary>
+        /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
+        /// </summary>
+        public bool IsComplete
+        {
+            get { return immature == null; }
+        }
+
+        /// <summary>
+        /// Get the pairs of bound variables and their values.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown when the state is incomplete.</exception>
+        public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
+        {
+            if (!IsComplete) throw new InvalidOperationException("State is not complete.");
+            return substitutions;
+        }
+
+        /// <summary>
+        /// Continue any remaining computation and return the stream of states it generates, if any.
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Thrown if state is complete.</exception>
+        public IEnumerable<State> Continue()
+        {
+            if (IsComplete) throw new InvalidOperationException("State is complete.");
+            return immature();
+        }
+
+        /// <summary>
         /// Extend the set of bindings.
         /// </summary>
         /// <param name="x"></param>
@@ -25,22 +55,6 @@ namespace uKanren
         {
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
             return new State { substitutions = substitutions.Add(x, v), next = next, immature = immature };
-        }
-
-        public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
-        {
-            //return immature == null ? substitutions : Enumerable.Empty<KeyValuePair<Kanren, object>>();
-            //return immature == null ? substitutions : substitutions.Concat(immature().SelectMany(x => x.Values));
-            // if immature != null, then this state is not yet fully resolved
-            return GetBounded(1);
-            //return substitutions;
-        }
-
-        IEnumerable<KeyValuePair<Kanren, object>> GetBounded(int current)
-        {
-            return immature == null ? substitutions:
-                   current < 1000  ? immature().SelectMany(x => x.GetBounded(current + 1)):
-                                      Enumerable.Empty<KeyValuePair<Kanren, object>>();
         }
 
         /// <summary>
