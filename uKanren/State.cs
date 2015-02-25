@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sasa;
 using Sasa.Collections;
 
 namespace uKanren
@@ -31,7 +32,8 @@ namespace uKanren
         public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
         {
             //if (!IsComplete) throw new InvalidOperationException("State is not complete.");
-            return substitutions;
+            // resolve any unbound variables on the fly
+            return substitutions.Select(x => Tuples.Keyed(x.Key, Resolve(x.Value)));
         }
 
         /// <summary>
@@ -56,7 +58,7 @@ namespace uKanren
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
             return new State
             {
-                substitutions = substitutions.Add(x, Resolve(v)),
+                substitutions = substitutions.Add(x, v),
                 next = next,
                 incomplete = incomplete
             };
@@ -65,6 +67,9 @@ namespace uKanren
         /// <summary>
         /// Recursively resolve any inner variables.
         /// </summary>
+        /// <remarks>
+        /// This works because any nested variables
+        /// </remarks>
         object Resolve(object v)
         {
             var iv = v as System.Collections.IEnumerable;

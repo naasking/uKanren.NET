@@ -159,7 +159,7 @@ namespace KanrenTests
 
         static Goal DoublyNestedArray()
         {
-            return Kanren.Exists(x => x == new[] { 3, 99 } & Kanren.Exists(z => z == new object[] { x, 2, 9 }));
+            return Kanren.Exists(x => Kanren.Exists(z => z == new object[] { x, 2, 9 }) & x == new[] { 3, 99 });
         }
     }
 }
