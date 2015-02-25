@@ -90,7 +90,7 @@ namespace uKanren
             var args = body.Method.GetParameters();
             var arg0 = args[0].Name;
             var arg1 = args[1].Name;
-            var arg2 = args[1].Name;
+            var arg2 = args[2].Name;
             return new Goal
             {
                 Thunk = state =>
@@ -114,8 +114,8 @@ namespace uKanren
             var args = body.Method.GetParameters();
             var arg0 = args[0].Name;
             var arg1 = args[1].Name;
-            var arg2 = args[1].Name;
-            var arg3 = args[1].Name;
+            var arg2 = args[2].Name;
+            var arg3 = args[3].Name;
             return new Goal
             {
                 Thunk = state =>
