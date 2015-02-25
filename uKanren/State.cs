@@ -32,7 +32,8 @@ namespace uKanren
         public IEnumerable<KeyValuePair<Kanren, object>> GetValues()
         {
             //if (!IsComplete) throw new InvalidOperationException("State is not complete.");
-            // resolve any unbound variables on the fly
+            // resolve any unbound variables on the fly; could make this more efficient by
+            // updating the trie in-place, which is a safe operation in this case
             return substitutions.Select(x => Tuples.Keyed(x.Key, Resolve(x.Value)));
         }
 
