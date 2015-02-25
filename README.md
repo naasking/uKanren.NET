@@ -71,7 +71,7 @@ Resolve variables within arrays:
 			 & Kanren.Exists(z => z == new object[] { x, 2, 9 }));
     }
 	...
-    var y = Kanren.Exists(Fives).Search(Kanren.EmptyState);
+    var y = Kanren.Exists(DoublyNestedArrays).Search(Kanren.EmptyState);
     Print(y);
 
 	//output:
