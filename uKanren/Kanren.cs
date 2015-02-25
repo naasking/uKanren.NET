@@ -13,7 +13,10 @@ namespace uKanren
     /// </summary>
     public sealed class Kanren
     {
-        internal int id;
+        /// <summary>
+        /// The globally unique variable identifier.
+        /// </summary>
+        public int Id { get; internal set; }
 
         /// <summary>
         /// The variable's name, bound to the parameter of the outer-most expression using Kanren.Exists.
@@ -22,18 +25,18 @@ namespace uKanren
 
         public override int GetHashCode()
         {
-            return id;
+            return Id;
         }
 
         public override bool Equals(object other)
         {
             Kanren x = other as Kanren;
-            return !ReferenceEquals(x, null) && id == x.id;
+            return !ReferenceEquals(x, null) && Id == x.Id;
         }
 
         public override string ToString()
         {
-            return Name + "[" + id + "]";
+            return Name + "[" + Id + "]";
         }
 
         public static State EmptyState = new State();
@@ -51,7 +54,7 @@ namespace uKanren
             {
                 Thunk = state =>
                 {
-                    var fn = body(new Kanren { id = state.next, Name = arg });
+                    var fn = body(new Kanren { Id = state.next, Name = arg });
                     return fn.Thunk(state.Next(1));
                 }
             };
@@ -64,14 +67,65 @@ namespace uKanren
         /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Exists(Func<Kanren, Kanren, Goal> body)
         {
-            var arg0 = body.Method.GetParameters()[0].Name;
-            var arg1 = body.Method.GetParameters()[1].Name;
+            var args = body.Method.GetParameters();
+            var arg0 = args[0].Name;
+            var arg1 = args[1].Name;
             return new Goal
             {
                 Thunk = state =>
                 {
-                    var fn = body(new Kanren { id = state.next, Name = arg0 }, new Kanren { id = state.next + 1, Name = arg1 });
+                    var fn = body(new Kanren { Id = state.next, Name = arg0 }, new Kanren { Id = state.next + 1, Name = arg1 });
                     return fn.Thunk(state.Next(2));
+                }
+            };
+        }
+
+        /// <summary>
+        /// Declare an goal with two new logic variables.
+        /// </summary>
+        /// <param name="body">The function describing the goal given the new Kanren variable.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
+        public static Goal Exists(Func<Kanren, Kanren, Kanren, Goal> body)
+        {
+            var args = body.Method.GetParameters();
+            var arg0 = args[0].Name;
+            var arg1 = args[1].Name;
+            var arg2 = args[1].Name;
+            return new Goal
+            {
+                Thunk = state =>
+                {
+                    var fn = body(
+                        new Kanren { Id = state.next, Name = arg0 },
+                        new Kanren { Id = state.next + 1, Name = arg1 },
+                        new Kanren { Id = state.next + 2, Name = arg2 });
+                    return fn.Thunk(state.Next(3));
+                }
+            };
+        }
+
+        /// <summary>
+        /// Declare an goal with two new logic variables.
+        /// </summary>
+        /// <param name="body">The function describing the goal given the new Kanren variable.</param>
+        /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
+        public static Goal Exists(Func<Kanren, Kanren, Kanren, Kanren, Goal> body)
+        {
+            var args = body.Method.GetParameters();
+            var arg0 = args[0].Name;
+            var arg1 = args[1].Name;
+            var arg2 = args[1].Name;
+            var arg3 = args[1].Name;
+            return new Goal
+            {
+                Thunk = state =>
+                {
+                    var fn = body(
+                        new Kanren { Id = state.next, Name = arg0 },
+                        new Kanren { Id = state.next + 1, Name = arg1 },
+                        new Kanren { Id = state.next + 2, Name = arg2 },
+                        new Kanren { Id = state.next + 3, Name = arg3 });
+                    return fn.Thunk(state.Next(4));
                 }
             };
         }
