@@ -55,6 +55,10 @@ namespace KanrenTests
             Console.WriteLine("\r\nArrayDisequality:");
             Print(ad.Search(Kanren.EmptyState));
 
+            var dn = DoublyNestedArray();
+            Console.WriteLine("\r\nDoubleNestedArray:");
+            Print(dn.Search(Kanren.EmptyState));
+
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
@@ -86,7 +90,7 @@ namespace KanrenTests
             if (ie != null)
             {
                 var sb = new StringBuilder("[");
-                foreach (var y in ie) sb.AppendFormat("{0}, ", y);
+                foreach (var y in ie) sb.AppendFormat("{0}, ", Print(y));
                 return sb.RemoveLast(2).Append("]").ToString();
             }
             return x;
@@ -151,6 +155,11 @@ namespace KanrenTests
         static Goal ArrayDisequality()
         {
             return Kanren.Exists(x => x == new[] { 1, 2, 3 } & Kanren.Exists(z => z == x & z == new[] { 1, 2 }));
+        }
+
+        static Goal DoublyNestedArray()
+        {
+            return Kanren.Exists(x => x == new[] { 3, 99 } & Kanren.Exists(z => z == new object[] { x, 2, 9 }));
         }
     }
 }

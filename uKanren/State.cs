@@ -54,7 +54,42 @@ namespace uKanren
         internal State Extend(Kanren x, object v)
         {
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
-            return new State { substitutions = substitutions.Add(x, v), next = next, incomplete = incomplete };
+            return new State
+            {
+                substitutions = substitutions.Add(x, Resolve(v)),
+                next = next,
+                incomplete = incomplete
+            };
+        }
+
+        /// <summary>
+        /// Recursively resolve any inner variables.
+        /// </summary>
+        object Resolve(object v)
+        {
+            var iv = v as System.Collections.IEnumerable;
+            if (iv != null && ContainsVar(iv))
+            {
+                var s = this;
+                var tmp = new List<object>();
+                foreach (var x in iv)
+                {
+                    var k = x as Kanren;
+                    object y;
+                    tmp.Add(Resolve(!ReferenceEquals(k, null) && substitutions.TryGetValue(k, out y) ? y : x));
+                }
+                return tmp;
+            }
+            return v;
+        }
+
+        bool ContainsVar(System.Collections.IEnumerable iv)
+        {
+            foreach (var x in iv)
+            {
+                if (x is Kanren) return true;
+            }
+            return false;
         }
 
         /// <summary>
