@@ -110,7 +110,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Thunk = state => new[] { new State { substitutions = state.substitutions, next = state.next, incomplete = () => body(x) } }
+                Thunk = state => new Lifo<State>(new State { incomplete = () => body(x) })
             };
         }
 
@@ -127,7 +127,7 @@ namespace uKanren
                 Thunk = state =>
                 {
                     var s = Unify(left, right, state);
-                    return s != null ? new[] { s } : Enumerable.Empty<State>();
+                    return s != null ? new Lifo<State>(s) : Enumerable.Empty<State>();
                 }
             };
         }
