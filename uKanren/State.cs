@@ -67,9 +67,6 @@ namespace uKanren
         /// <summary>
         /// Recursively resolve any inner variables.
         /// </summary>
-        /// <remarks>
-        /// This works because any nested variables
-        /// </remarks>
         object Resolve(object v)
         {
             var iv = v as System.Collections.IEnumerable;
