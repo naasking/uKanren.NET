@@ -39,6 +39,18 @@ namespace KanrenTests
             Console.WriteLine("\r\nFives xor Sixes:");
             Print(fx.Search(Kanren.EmptyState));
 
+            var a = Array();
+            Console.WriteLine("\r\nArray:");
+            Print(a.Search(Kanren.EmptyState));
+
+            var n = NestedArray();
+            Console.WriteLine("\r\nNestedArray:");
+            Print(n.Search(Kanren.EmptyState));
+
+            var ae = ArrayEquality();
+            Console.WriteLine("\r\nArrayEquality:");
+            Print(ae.Search(Kanren.EmptyState));
+
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
@@ -52,7 +64,7 @@ namespace KanrenTests
                 {
                     foreach (var y in x.GetValues().Take(7))
                     {
-                        Console.Write("{0} = {1}, ", y.Key, y.Value);
+                        Console.Write("{0} = {1}, ", y.Key, Print(y.Value));
                     }
                     Console.WriteLine();
                 }
@@ -62,6 +74,18 @@ namespace KanrenTests
                         Print(x.Continue(), depth + 1);
                 }
             }
+        }
+
+        static object Print(object x)
+        {
+            var ie = x as System.Collections.IEnumerable;
+            if (ie != null)
+            {
+                var sb = new StringBuilder("[");
+                foreach (var y in ie) sb.AppendFormat("{0}, ", y);
+                return sb.RemoveLast(2).Append("]").ToString();
+            }
+            return x;
         }
 
         public static Goal Simple()
@@ -103,6 +127,21 @@ namespace KanrenTests
         static Goal FivesXorSixes()
         {
             return Kanren.Exists(z => Fives(z) & Sixes(z));
+        }
+
+        static Goal Array()
+        {
+            return Kanren.Exists(z => z == new[] { 1, 2, 9 });
+        }
+
+        static Goal NestedArray()
+        {
+            return Kanren.Exists(x => x == 99 & Kanren.Exists(z => z == new object[] { x, 2, 9 }));
+        }
+
+        static Goal ArrayEquality()
+        {
+            return Kanren.Exists(x => x == new[] { 1, 2 } & Kanren.Exists(z => z == x & z == new[] { 1, 2 }));
         }
     }
 }

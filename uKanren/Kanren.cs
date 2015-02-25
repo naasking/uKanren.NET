@@ -179,9 +179,31 @@ namespace uKanren
                 return s.Extend(uvar, v);
             if (!ReferenceEquals(vvar, null))
                 return s.Extend(vvar, u);
+            var iu = u as System.Collections.IEnumerable;
+            var iv = v as System.Collections.IEnumerable;
+            //FIXME: this doesn't unify more complex objects, like tuples, arrays, etc.
+            if (iu != null && iv != null)
+                return Unify(iu, iv, s);
             if (u.Equals(v))
                 return s;
             return null;
+        }
+
+        static State Unify(System.Collections.IEnumerable iu, System.Collections.IEnumerable iv, State s)
+        {
+            var eu = iu.GetEnumerator();
+            var ev = iv.GetEnumerator();
+            bool bu, bv;
+            do
+            {
+                bu = eu.MoveNext();
+                bv = ev.MoveNext();
+                // sequences don't unify when either is shorter than the other
+                if (bu ^ bv) return null;
+                if (!bu && !bv) break;
+                s = Unify(eu.Current, ev.Current, s);
+            } while (s != null);
+            return s;
         }
         #endregion
 
