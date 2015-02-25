@@ -91,6 +91,8 @@ namespace uKanren
             foreach (var x in iv)
             {
                 if (x is Kanren) return true;
+                var iiv = x as System.Collections.IEnumerable;
+                if (iiv != null && ContainsVar(iiv)) return true;
             }
             return false;
         }
