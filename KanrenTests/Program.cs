@@ -58,7 +58,7 @@ namespace KanrenTests
                 }
                 else
                 {
-                    if (!x.IsComplete && depth < 2)
+                    if (!x.IsComplete && depth < 10)
                         Print(x.Continue(), depth + 1);
                 }
             }
