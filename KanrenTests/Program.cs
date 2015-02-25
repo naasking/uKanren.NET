@@ -51,6 +51,10 @@ namespace KanrenTests
             Console.WriteLine("\r\nArrayEquality:");
             Print(ae.Search(Kanren.EmptyState));
 
+            var ad = ArrayDisequality();
+            Console.WriteLine("\r\nArrayDisequality:");
+            Print(ad.Search(Kanren.EmptyState));
+
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
@@ -142,6 +146,11 @@ namespace KanrenTests
         static Goal ArrayEquality()
         {
             return Kanren.Exists(x => x == new[] { 1, 2 } & Kanren.Exists(z => z == x & z == new[] { 1, 2 }));
+        }
+
+        static Goal ArrayDisequality()
+        {
+            return Kanren.Exists(x => x == new[] { 1, 2, 3 } & Kanren.Exists(z => z == x & z == new[] { 1, 2 }));
         }
     }
 }
