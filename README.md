@@ -44,7 +44,7 @@ Variable x may equal 1 and 9:
         return x == 1 & x == 9;
     }
 	...
-    var y = OneAndNine().Search(Kanren.EmptyState);
+    var y = Kanren.Exists(OneAndNine).Search(Kanren.EmptyState);
     Print(y);
 
 	//output:
@@ -56,12 +56,25 @@ Recursive equation where variable may equal 5:
         return x == 5 | Kanren.Recurse(Fives, x);
     }
 	...
-    var y = Fives().Search(Kanren.EmptyState);
+    var y = Kanren.Exists(Fives).Search(Kanren.EmptyState);
     Print(y);
 
 	//output:
 	//x[0] = 5,
 	//x[0] = 5, x[0] = 5, x[0] = 5, [stream continues]
+
+Resolve variables within arrays:
+
+    static Goal DoublyNestedArray()
+    {
+        return Kanren.Exists(x => x == new[] { 3, 99 } & Kanren.Exists(z => z == new object[] { x, 2, 9 }));
+    }
+	...
+    var y = Kanren.Exists(Fives).Search(Kanren.EmptyState);
+    Print(y);
+
+	//output:
+	//x[0] = [3, 99], z[1] = [[3, 99], 2, 9]
 
 # LICENSE
 
