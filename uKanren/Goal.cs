@@ -18,12 +18,12 @@ namespace uKanren
         /// </summary>
         /// <param name="state">The starting state.</param>
         /// <returns>The set of states that satisfy the goals.</returns>
-        public IEnumerable<State> Search(State state)
+        public IEnumerable<State> Search(State state = null)
         {
             // evaluate the stream lazily, invoking and tracking incomplete states as we encounter them
             if (Thunk == null) yield break;
             var queued = new Queue<Lifo<State>>();
-            for (var x = Thunk(state); !x.IsEmpty || queued.Count > 0; x = x.Next)
+            for (var x = Thunk(state ?? Kanren.EmptyState); !x.IsEmpty || queued.Count > 0; x = x.Next)
             {
                 while (x.IsEmpty) x = queued.Dequeue();
                 if (x.Value.IsComplete)
