@@ -39,7 +39,7 @@ namespace uKanren
             return Name + "[" + Id + "]";
         }
 
-        public static State EmptyState = new State();
+        public readonly static State EmptyState = new State();
 
         #region Core uKanren operators
         /// <summary>
@@ -141,17 +141,17 @@ namespace uKanren
             return new Goal { Thunk = state => Bind(left.Thunk(state), x => right.Thunk(x)) };
         }
 
-        static Lifo<State> MPlus(Lifo<State> l1, Lifo<State> l2)
+        static Lifo<State> Interleave(Lifo<State> l1, Lifo<State> l2)
         {
             return l1.IsEmpty          ? l2:
-                   l1.Value.IsComplete ? MPlus(l1.Next, l2) & l1.Value:
-                                         new Lifo<State>(new State { incomplete = () => MPlus(l2, l1.Value.incomplete()) });
+                   l1.Value.IsComplete ? Interleave(l2, l1.Next) & l1.Value:
+                                         new Lifo<State>(new State { incomplete = () => Interleave(l2, l1.Value.incomplete()) });
         }
 
         static Lifo<State> Bind(Lifo<State> l1, Func<State, Lifo<State>> selector)
         {
             return l1.IsEmpty          ? l1:
-                   l1.Value.IsComplete ? MPlus(selector(l1.Value), Bind(l1.Next, selector)):
+                   l1.Value.IsComplete ? Interleave(selector(l1.Value), Bind(l1.Next, selector)):
                                          new Lifo<State>(new State { incomplete = () => Bind(l1.Value.incomplete(), selector) } );
         }
 
@@ -177,7 +177,7 @@ namespace uKanren
         {
             // concat works here, but is less fair than interleaving evaluation between left and right
             //return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
-            return new Goal { Thunk = state => MPlus(left.Thunk(state), right.Thunk(state)) };
+            return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
         }
 
         ///// <summary>
@@ -227,7 +227,7 @@ namespace uKanren
         #endregion
 
         #region Unification
-        static object Walk(object uvar, State env)
+        internal static object Walk(object uvar, State env)
         {
             // search for final Kanren binding in env
             Kanren v;
