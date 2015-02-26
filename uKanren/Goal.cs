@@ -20,11 +20,12 @@ namespace uKanren
         /// <returns>The set of states that satisfy the goals.</returns>
         public IEnumerable<State> Search(State state)
         {
+            // evaluate the stream lazily, invoking and tracking incomplete states as we encounter them
             if (Thunk == null) yield break;
             var queued = new Queue<Lifo<State>>();
             for (var x = Thunk(state); !x.IsEmpty || queued.Count > 0; x = x.Next)
             {
-                if (x.IsEmpty) x = queued.Dequeue();
+                while (x.IsEmpty) x = queued.Dequeue();
                 if (x.Value.IsComplete)
                     yield return x.Value;
                 else
