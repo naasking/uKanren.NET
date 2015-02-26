@@ -46,12 +46,30 @@ namespace uKanren
         internal State Extend(Kanren x, object v)
         {
             //FIXME: shouldn't duplicate a binding, but if it would, should return null?
-            return new State
+
+            return Occurs(x, v, this) ? null : new State
             {
                 substitutions = substitutions.Add(x, v),
                 next = next,
                 incomplete = incomplete
             };
+        }
+
+        static bool Occurs(Kanren x, object vorig, State s)
+        {
+            var v = Kanren.Walk(vorig, s);
+            var vvar = v as Kanren;
+            if (!ReferenceEquals(vvar, null))
+                return vvar.Equals(x);
+            var iv = v as System.Collections.IEnumerable;
+            if (iv != null)
+            {
+                foreach (var z in iv)
+                {
+                    if (Occurs(x, z, s)) return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
