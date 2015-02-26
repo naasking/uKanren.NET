@@ -45,7 +45,6 @@ namespace uKanren
         public IEnumerable<State> Continue()
         {
             if (IsComplete) throw new InvalidOperationException("State is complete.");
-            //return incomplete().Thunk(this);
             return incomplete();
         }
 
