@@ -145,7 +145,7 @@ namespace uKanren
         {
             return l1.IsEmpty          ? l2:
                    l1.Value.IsComplete ? MPlus(l1.Next, l2) & l1.Value:
-                                         new Lifo<State>(new State { incomplete = () => MPlus(l1.Value.incomplete(), l2) });
+                                         new Lifo<State>(new State { incomplete = () => MPlus(l2, l1.Value.incomplete()) });
         }
 
         static Lifo<State> Bind(Lifo<State> l1, Func<State, Lifo<State>> selector)
@@ -223,24 +223,6 @@ namespace uKanren
                     return s != null ? new Lifo<State>(s) : Lifo<State>.Empty;
                 }
             };
-        }
-
-        static IEnumerable<State> Interleave(IEnumerable<State> left, IEnumerable<State> right)
-        {
-            using (var eleft = left.GetEnumerator())
-            {
-                using (var eright = right.GetEnumerator())
-                {
-                    bool bleft, bright;
-                    do
-                    {
-                        bleft = eleft.MoveNext();
-                        bright = eright.MoveNext();
-                        if (bleft) yield return eleft.Current;
-                        if (bright) yield return eright.Current;
-                    } while(bleft || bright);
-                }
-            }
         }
         #endregion
 
