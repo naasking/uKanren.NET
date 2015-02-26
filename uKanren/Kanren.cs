@@ -143,12 +143,16 @@ namespace uKanren
 
         static Lifo<State> MPlus(Lifo<State> l1, Lifo<State> l2)
         {
-            return l1.IsEmpty ? l2 : MPlus(l1.Next, l2) & l1.Value;
+            return l1.IsEmpty          ? l2:
+                   l1.Value.IsComplete ? MPlus(l1.Next, l2) & l1.Value:
+                                         new Lifo<State>(new State { incomplete = () => MPlus(l1.Value.incomplete(), l2) });
         }
 
         static Lifo<State> Bind(Lifo<State> l1, Func<State, Lifo<State>> selector)
         {
-            return l1.IsEmpty ? l1 : MPlus(selector(l1.Value), Bind(l1.Next, selector));
+            return l1.IsEmpty          ? l1:
+                   l1.Value.IsComplete ? MPlus(selector(l1.Value), Bind(l1.Next, selector)):
+                                         new Lifo<State>(new State { incomplete = () => Bind(l1.Value.incomplete(), selector) } );
         }
 
         ///// <summary>
@@ -199,7 +203,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Thunk = state => new Lifo<State>(new State { incomplete = () => body(x) })
+                Thunk = state => new Lifo<State>(new State { incomplete = () => body(x).Thunk(state) })
             };
         }
 
