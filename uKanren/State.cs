@@ -10,10 +10,10 @@ namespace uKanren
     /// <summary>
     /// A set of bindings.
     /// </summary>
-    public sealed class State
+    public struct State
     {
         internal Trie<Kanren, object> substitutions;
-        internal int next = 0;
+        internal int next;
         internal Func<Lifo<State>> incomplete;
 
         /// <summary>
@@ -26,7 +26,8 @@ namespace uKanren
             //if (!IsComplete) throw new InvalidOperationException("State is not complete.");
             // resolve any unbound variables on the fly; could make this more efficient by
             // updating the trie in-place, which is a safe operation in this case
-            return substitutions.Select(x => Tuples.Keyed(x.Key, Resolve(x.Value)));
+            var subs = substitutions;
+            return subs.Select(x => Tuples.Keyed(x.Key, Resolve(subs, x.Value)));
         }
 
         /// <summary>
@@ -57,25 +58,24 @@ namespace uKanren
         /// <summary>
         /// Recursively resolve any inner variables.
         /// </summary>
-        object Resolve(object v)
+        static object Resolve(Trie<Kanren, object> substitutions, object v)
         {
             var iv = v as System.Collections.IEnumerable;
             if (iv != null && ContainsVar(iv))
             {
-                var s = this;
                 var tmp = new List<object>();
                 foreach (var x in iv)
                 {
                     var k = x as Kanren;
                     object y;
-                    tmp.Add(Resolve(!ReferenceEquals(k, null) && substitutions.TryGetValue(k, out y) ? y : x));
+                    tmp.Add(Resolve(substitutions, !ReferenceEquals(k, null) && substitutions.TryGetValue(k, out y) ? y : x));
                 }
                 return tmp;
             }
             return v;
         }
 
-        bool ContainsVar(System.Collections.IEnumerable iv)
+        static bool ContainsVar(System.Collections.IEnumerable iv)
         {
             foreach (var x in iv)
             {

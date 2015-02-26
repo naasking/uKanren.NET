@@ -220,7 +220,7 @@ namespace uKanren
                 Thunk = state =>
                 {
                     var s = Unify(left, right, state);
-                    return s != null ? new Lifo<State>(s) : Lifo<State>.Empty;
+                    return s != null ? new Lifo<State>(s.Value) : Lifo<State>.Empty;
                 }
             };
         }
@@ -242,7 +242,7 @@ namespace uKanren
             return uvar;
         }
 
-        static State Unify(object uorig, object vorig, State s)
+        static State? Unify(object uorig, object vorig, State s)
         {
             var u = Walk(uorig, s);
             var v = Walk(vorig, s);
@@ -257,13 +257,13 @@ namespace uKanren
             var iu = u as System.Collections.IEnumerable;
             var iv = v as System.Collections.IEnumerable;
             if (iu != null && iv != null)
-                return Unify(iu, iv, s);
+                return UnifyEnumerable(iu, iv, s);
             if (u.Equals(v))
                 return s;
             return null;
         }
 
-        static State Unify(System.Collections.IEnumerable iu, System.Collections.IEnumerable iv, State s)
+        static State? UnifyEnumerable(System.Collections.IEnumerable iu, System.Collections.IEnumerable iv, State? s)
         {
             var eu = iu.GetEnumerator();
             var ev = iv.GetEnumerator();
@@ -275,7 +275,7 @@ namespace uKanren
                 // sequences don't unify when either is shorter than the other
                 if (bu ^ bv) return null;
                 if (!bu && !bv) break;
-                s = Unify(eu.Current, ev.Current, s);
+                s = Unify(eu.Current, ev.Current, s.Value);
             } while (s != null);
             return s;
         }
