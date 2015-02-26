@@ -138,8 +138,30 @@ namespace uKanren
         /// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
         public static Goal Conjunction(Goal left, Goal right)
         {
-            return new Goal { Thunk = state => left.Thunk(state).SelectMany(x => right.Thunk(x)) };
+            return new Goal { Thunk = state => Bind(left.Thunk(state), x => right.Thunk(x)) };
         }
+
+        static Lifo<State> MPlus(Lifo<State> l1, Lifo<State> l2)
+        {
+            return l1.IsEmpty ? l2 : MPlus(l1.Next, l2) & l1.Value;
+        }
+
+        static Lifo<State> Bind(Lifo<State> l1, Func<State, Lifo<State>> selector)
+        {
+            return l1.IsEmpty ? l1 : MPlus(selector(l1.Value), Bind(l1.Next, selector));
+        }
+
+        ///// <summary>
+        ///// Satisfy both two goals simultaneously.
+        ///// </summary>
+        ///// <param name="left">The left goal to satisfy.</param>
+        ///// <param name="right">The right goal to satisfy.</param>
+        ///// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
+        //public static Goal Conjunction(params Goal[] goals)
+        //{
+        //    if (goals == null || goals.Length == 0) throw new ArgumentException("Conjunction needs at least one goal.");
+        //    return new Goal { Thunk = state => goals.First().Thu.SelectMany(z => z.Thunk(state).SelectMany(x => right.Thunk(x))) };
+        //}
 
         /// <summary>
         /// Satisfy either of the two goals.
@@ -151,8 +173,21 @@ namespace uKanren
         {
             // concat works here, but is less fair than interleaving evaluation between left and right
             //return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
-            return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
+            return new Goal { Thunk = state => MPlus(left.Thunk(state), right.Thunk(state)) };
         }
+
+        ///// <summary>
+        ///// Satisfy either of the two goals.
+        ///// </summary>
+        ///// <param name="left">The left goal to satisfy.</param>
+        ///// <param name="right">The right goal to satisfy.</param>
+        ///// <returns>A <see cref="Goal"/> describing the equalities to satisfy.</returns>
+        //public static Goal Disjunction(params Goal[] goals)
+        //{
+        //    // concat works here, but is less fair than interleaving evaluation between left and right
+        //    //return new Goal { Thunk = state => left.Thunk(state).Concat(right.Thunk(state)) };
+        //    return new Goal { Thunk = state => Interleave(left.Thunk(state), right.Thunk(state)) };
+        //}
 
         /// <summary>
         /// Satisfy both two goals simultaneously.
@@ -181,7 +216,7 @@ namespace uKanren
                 Thunk = state =>
                 {
                     var s = Unify(left, right, state);
-                    return s != null ? new Lifo<State>(s) : Enumerable.Empty<State>();
+                    return s != null ? new Lifo<State>(s) : Lifo<State>.Empty;
                 }
             };
         }

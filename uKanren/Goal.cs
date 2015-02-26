@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sasa.Collections;
 
 namespace uKanren
 {
@@ -10,7 +11,7 @@ namespace uKanren
     /// </summary>
     public struct Goal
     {
-        internal Func<State, IEnumerable<State>> Thunk { get; set; }
+        internal Func<State, Lifo<State>> Thunk { get; set; }
 
         /// <summary>
         /// Run the search given a state.
