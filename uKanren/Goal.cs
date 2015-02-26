@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Sasa.Collections;
 
 namespace uKanren
 {
@@ -10,7 +11,7 @@ namespace uKanren
     /// </summary>
     public struct Goal
     {
-        internal Func<State, IEnumerable<State>> Thunk { get; set; }
+        internal Func<State, Lifo<State>> Thunk { get; set; }
 
         /// <summary>
         /// Run the search given a state.
@@ -19,7 +20,17 @@ namespace uKanren
         /// <returns>The set of states that satisfy the goals.</returns>
         public IEnumerable<State> Search(State state)
         {
-            return Thunk == null ? Enumerable.Empty<State>() : Thunk(state);
+            // evaluate the stream lazily, invoking and tracking incomplete states as we encounter them
+            if (Thunk == null) yield break;
+            var queued = new Queue<Lifo<State>>();
+            for (var x = Thunk(state); !x.IsEmpty || queued.Count > 0; x = x.Next)
+            {
+                while (x.IsEmpty) x = queued.Dequeue();
+                if (x.Value.IsComplete)
+                    yield return x.Value;
+                else
+                    queued.Enqueue(x.Value.incomplete());
+            }
         }
 
         public static Goal operator |(Goal left, Goal right)

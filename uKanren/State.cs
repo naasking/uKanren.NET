@@ -14,15 +14,7 @@ namespace uKanren
     {
         internal Trie<Kanren, object> substitutions;
         internal int next = 0;
-        internal Func<IEnumerable<State>> incomplete;
-
-        /// <summary>
-        /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
-        /// </summary>
-        public bool IsComplete
-        {
-            get { return incomplete == null; }
-        }
+        internal Func<Lifo<State>> incomplete;
 
         /// <summary>
         /// Get the pairs of bound variables and their values.
@@ -38,14 +30,11 @@ namespace uKanren
         }
 
         /// <summary>
-        /// Continue any remaining computation and return the stream of states it generates, if any.
+        /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="InvalidOperationException">Thrown if state is complete.</exception>
-        public IEnumerable<State> Continue()
+        internal bool IsComplete
         {
-            if (IsComplete) throw new InvalidOperationException("State is complete.");
-            return incomplete();
+            get { return incomplete == null; }
         }
 
         /// <summary>
