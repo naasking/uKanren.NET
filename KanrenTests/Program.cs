@@ -66,21 +66,14 @@ namespace KanrenTests
         static void Print(IEnumerable<State> results, int depth = 0)
         {
             //var tmp = results.ElementAt(0).GetValues().Take(10).ToList();
-            foreach (var x in results)
+            foreach (var x in results.Take(10))
             {
-                if (x.IsComplete)
+                if (!x.IsComplete) throw new Exception("Incomplete!");
+                foreach (var y in x.GetValues().Take(7))
                 {
-                    foreach (var y in x.GetValues().Take(7))
-                    {
-                        Console.Write("{0} = {1}, ", y.Key, Print(y.Value));
-                    }
-                    Console.WriteLine();
+                    Console.Write("{0} = {1}, ", y.Key, Print(y.Value));
                 }
-                else
-                {
-                    if (!x.IsComplete && depth < 10)
-                        Print(x.Continue(), depth + 1);
-                }
+                Console.WriteLine();
             }
         }
 

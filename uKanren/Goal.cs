@@ -20,7 +20,16 @@ namespace uKanren
         /// <returns>The set of states that satisfy the goals.</returns>
         public IEnumerable<State> Search(State state)
         {
-            return Thunk == null ? Enumerable.Empty<State>() : Thunk(state);
+            if (Thunk == null) yield break;
+            var queued = new Queue<Lifo<State>>();
+            for (var x = Thunk(state); !x.IsEmpty || queued.Count > 0; x = x.Next)
+            {
+                if (x.IsEmpty) x = queued.Dequeue();
+                if (x.Value.IsComplete)
+                    yield return x.Value;
+                else
+                    queued.Enqueue(x.Value.incomplete());
+            }
         }
 
         public static Goal operator |(Goal left, Goal right)
