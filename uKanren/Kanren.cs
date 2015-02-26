@@ -164,7 +164,7 @@ namespace uKanren
         {
             return new Goal
             {
-                Thunk = state => new Lifo<State>(new State { incomplete = () => body(x) })
+                Thunk = state => new Lifo<State>(new State { incomplete = () => body(x).Thunk(state) })
             };
         }
 

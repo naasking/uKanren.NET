@@ -14,7 +14,7 @@ namespace uKanren
     {
         internal Trie<Kanren, object> substitutions;
         internal int next = 0;
-        internal Func<Goal> incomplete;
+        internal Func<IEnumerable<State>> incomplete;
 
         /// <summary>
         /// True if this state is final, such that all bindings have values, false if some computation remains to be done.
@@ -45,7 +45,7 @@ namespace uKanren
         public IEnumerable<State> Continue()
         {
             if (IsComplete) throw new InvalidOperationException("State is complete.");
-            return incomplete().Thunk(this);
+            return incomplete();
         }
 
         /// <summary>
