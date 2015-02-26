@@ -35,10 +35,6 @@ namespace KanrenTests
             Console.WriteLine("\r\nFives and Sixes:");
             Print(fs.Search(Kanren.EmptyState));
 
-            var fx = FivesXorSixes();
-            Console.WriteLine("\r\nFives xor Sixes:");
-            Print(fx.Search(Kanren.EmptyState));
-
             var a = Array();
             Console.WriteLine("\r\nArray:");
             Print(a.Search(Kanren.EmptyState));
@@ -59,17 +55,20 @@ namespace KanrenTests
             Console.WriteLine("\r\nDoubleNestedArray:");
             Print(dn.Search(Kanren.EmptyState));
 
+            // loops forever:
+            //var fx = FivesXorSixes();
+            //Console.WriteLine("\r\nFives xor Sixes:");
+            //Print(fx.Search(Kanren.EmptyState));
+
             Console.WriteLine("Please press enter...");
             Console.ReadLine();
         }
 
         static void Print(IEnumerable<State> results, int depth = 0)
         {
-            //var tmp = results.ElementAt(0).GetValues().Take(10).ToList();
             foreach (var x in results.Take(10))
             {
-                if (!x.IsComplete) throw new Exception("Incomplete!");
-                foreach (var y in x.GetValues().Take(7))
+                foreach (var y in x.GetValues())
                 {
                     Console.Write("{0} = {1}, ", y.Key, Print(y.Value));
                 }
